@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -42,17 +43,28 @@ public class GridManager : MonoBehaviour
     [Header("Grid Settings")]
     [SerializeField] private int width = 10;
     [SerializeField] private int height = 10;
-    [SerializeField] private float cellSize = 1f;
+
+    public float cellSize = 1f;
 
     [Header("Prefabs & Materials")]
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private Material walkableMaterial;
     [SerializeField] private Material wallMaterial;
+    [SerializeField] private Material startMaterial;
+    [SerializeField] private Material goalMaterial;
 
     private Node[,] nodes;
     private Dictionary<GameObject, Node> tileToNode = new();
 
-    private InputAction clickAction;
+    public Node StartNode { get; set; }
+    public Node GoalNode { get; set; }
+
+    private InputAction leftClick;
+    private InputAction rightClick;
+
+    //private bool placingStart = true;
+
+    public AgentMover agentMover;
 
     public int Width => width;
     public int Height => height;
@@ -65,18 +77,27 @@ public class GridManager : MonoBehaviour
 
     private void OnEnable()
     {
-        clickAction = new InputAction(name: "Click", type: InputActionType.Button, binding: "<Mouse>/leftButton");
+        leftClick = new InputAction(name: "leftClick", type: InputActionType.Button, binding: "<Mouse>/leftButton");
+        rightClick = new InputAction(name: "rightClick", type: InputActionType.Button, binding: "<Mouse>/rightButton");
 
-        clickAction.performed += OnClickPerformed; 
-        clickAction.Enable();
+        leftClick.performed += leftClickPerformed; 
+        leftClick.Enable();
+
+        rightClick.performed += rightClickPerformed;
+        rightClick.Enable();
     }
 
     private void OnDisable()
     {
-        if(clickAction != null)
+        if(leftClick != null)
         {
-            clickAction.performed -= OnClickPerformed;
-            clickAction.Disable();
+            leftClick.performed -= leftClickPerformed;
+            leftClick.Disable();
+        }
+        if(rightClick != null)
+        {
+            rightClick.performed -= rightClickPerformed;
+            rightClick.Disable();
         }
     }
 
@@ -103,9 +124,14 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    private void OnClickPerformed(InputAction.CallbackContext ctx)
+    private void leftClickPerformed(InputAction.CallbackContext ctx)
     {
         HandleMouseClick();
+    }
+
+    private void rightClickPerformed(InputAction.CallbackContext ctx)
+    {
+        SelectStartAndGoal();
     }
 
     private void HandleMouseClick()
@@ -127,6 +153,54 @@ public class GridManager : MonoBehaviour
         }  
     }
 
+    private void SelectStartAndGoal()
+    {
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            GameObject clicked = hit.collider.gameObject;
+            if (tileToNode.TryGetValue(clicked, out Node node))
+            {
+                /*if (placingStart)
+                {
+                    // Clear old start
+                    if (StartNode != null)
+                    {
+                        SetTileMaterial(StartNode, walkableMaterial);
+                    }
+
+                    StartNode = node;
+                    SetTileMaterial(node, startMaterial);
+                }
+                else
+                {
+                    // Clear old goal
+                    if (GoalNode != null)
+                    {
+                        SetTileMaterial(GoalNode, walkableMaterial);
+                    }
+
+                    GoalNode = node;
+                    SetTileMaterial(node, goalMaterial);
+                }
+
+                placingStart = !placingStart;*/
+                if (GoalNode != null)
+                {
+                    SetTileMaterial(GoalNode, walkableMaterial);
+                }
+
+                GoalNode = node;
+                SetTileMaterial(node, goalMaterial);
+
+            }
+        }
+    }
+
     public Node GetNode(int x, int y)
     {
         if(x < 0 || x >= width || y < 0 || y >= height)
@@ -138,8 +212,11 @@ public class GridManager : MonoBehaviour
 
     public Node GetNodeFromWorldPosition(Vector3 worldPos)
     {
-        int x = Mathf.RoundToInt(worldPos.x / cellSize);
-        int y = Mathf.RoundToInt(worldPos.z / cellSize); 
+        int x = Mathf.FloorToInt(worldPos.x / cellSize);
+        int y = Mathf.FloorToInt(worldPos.z / cellSize);
+
+        x = Mathf.Clamp(x, 0, width - 1);
+        y = Mathf.Clamp(y, 0, height - 1);
         return GetNode(x, y);
     }
 
@@ -174,7 +251,7 @@ public class GridManager : MonoBehaviour
         SetTileMaterial(node, walkable ? walkableMaterial : wallMaterial);
     }
 
-    private void SetTileMaterial(Node node, Material mat)
+    public void SetTileMaterial(Node node, Material mat)
     {
         var renderer = node.tile.GetComponent<MeshRenderer>();
 
