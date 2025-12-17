@@ -39,3 +39,4 @@ public abstract class GoapActionBase : MonoBehaviour
         return new GoapState(bits);
     }
 }
+

@@ -1,7 +1,8 @@
 using UnityEngine;
 public class PickUpWeaponAction : GoapActionBase
 {
-    void Reset()
+  
+    void Awake()
     {
         actionName = "Pick Up Weapon";
 
@@ -10,6 +11,7 @@ public class PickUpWeaponAction : GoapActionBase
         preMask = GoapBits.Mask(GoapFact.AtWeapon);
         addMask = GoapBits.Mask(GoapFact.HasWeapon);
         delMask = GoapBits.Mask(GoapFact.AtWeapon); // recommended
+        delMask = GoapBits.Mask(GoapFact.AtWeapon, GoapFact.WeaponExists);
     }
     public override bool CheckProcedural(GoapContext ctx)
     {

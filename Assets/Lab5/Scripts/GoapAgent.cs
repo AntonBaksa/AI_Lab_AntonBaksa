@@ -75,6 +75,7 @@ public class GoapAgent : MonoBehaviour
         {
             // Apply effects only on success
             ApplyActionEffectsToOwnedFacts(_currentAction);
+            _ownedFactsBits &= ~GoapBits.Mask(GoapFact.PatrolStepDone,GoapFact.AtPlayer,GoapFact.AtWeapon);
             _currentAction.OnExit(_ctx);
             _currentAction = null;
             return;

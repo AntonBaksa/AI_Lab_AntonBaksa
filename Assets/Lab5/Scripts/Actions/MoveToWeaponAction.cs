@@ -2,14 +2,16 @@ using UnityEngine;
 public class MoveToWeaponAction : GoapActionBase
 {
     public float arriveDistance = 0.7f;
-    void Reset()
+
+    void Awake()
     {
         actionName = "Move To Weapon";
         cost = 1f;
         preMask = GoapBits.Mask(GoapFact.WeaponExists);
         addMask = GoapBits.Mask(GoapFact.AtWeapon);
-        delMask = 0;
+        delMask = GoapBits.Mask(GoapFact.AtWeapon);
     }
+    
     public override bool CheckProcedural(GoapContext ctx)
     {
         return ctx.Weapon != null && ctx.Weapon.gameObject.activeInHierarchy;

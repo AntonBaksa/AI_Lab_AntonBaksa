@@ -4,18 +4,16 @@ public class PatrolAction : GoapActionBase
 {
     public float arriveDistance = 0.7f;
 
-    void Reset()
+    void Awake()
     {
         actionName = "Patrol (One Step)";
         cost = 2f;
 
-        // No planner preconditions; goal selection handles “patrol only when not chasing”.
         preMask = 0;
-
-        // This is intentionally a "one-step completion" fact.
         addMask = GoapBits.Mask(GoapFact.PatrolStepDone);
         delMask = 0;
     }
+
     public override void OnEnter(GoapContext ctx)
     {
         if (ctx.PatrolWaypoints == null || ctx.PatrolWaypoints.Length == 0) return;

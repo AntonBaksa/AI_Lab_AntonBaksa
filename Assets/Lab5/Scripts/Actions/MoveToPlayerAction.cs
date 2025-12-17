@@ -2,7 +2,8 @@ using UnityEngine;
 public class MoveToPlayerAction : GoapActionBase
 {
     public float arriveDistance = 1.2f;
-    void Reset()
+
+    void Awake()
     {
         actionName = "Move To Player";
 
@@ -11,7 +12,7 @@ public class MoveToPlayerAction : GoapActionBase
         preMask = GoapBits.Mask(GoapFact.SeesPlayer);
         addMask = GoapBits.Mask(GoapFact.AtPlayer);
 
-        delMask = 0;
+        delMask = GoapBits.Mask(GoapFact.AtPlayer);
     }
     public override bool CheckProcedural(GoapContext ctx)
     {

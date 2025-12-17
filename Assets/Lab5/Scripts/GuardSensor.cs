@@ -13,7 +13,7 @@ public class GuardSensor : MonoBehaviour
     void Update()
     {
         SeesPlayer = false;
-        if (player != null) return;
+        if (player == null) return;
 
         if (!useLineOfSightRaycast)
         {
